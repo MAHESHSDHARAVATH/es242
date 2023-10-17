@@ -43,29 +43,46 @@ void generate_selections(int a[], int n, int k, int b[], void *data, void (*proc
  * The dictionary parameter is an array of words, sorted in dictionary order.
  * nwords is the number of words in this dictionary.
  */
-void generate_splits(const char *source, const char *dictionary[], int nwords, char buf[], void *data, void (*process_split(char buf[], void *data)))
-{
-        int start = 0;
-    int length_arr = strlen(source);
-    int length_buf = 0;
-   
-    for (int k = 0; k < nwords; ++k)
-     {
-        int length_word = strlen(dictionary[k]);
-        if (length_arr - start >= length_word  && strncmp(source + start, dictionary[k], length_word ) == 0) {
-            if (length_buf > 0) {
-                buf[length_buf++] = ' ';
+int isWord(char word[],int start,int end, const char *dictionary[], int nwords) {
+    int flag = 0;
+    for (int i = 0; i < nwords; i++) {
+        if (end-start+1 == strlen(dictionary[i])) {
+            flag = 0;
+            for (int j = 0; j < strlen(dictionary[i]); j++) {
+                if (word[j+start] != dictionary[i][j]) {
+                    flag = 1;
+                }
             }
-            strcpy(buf + length_buf, dictionary[k]);
-            start = length_word  + start;
-            length_buf = length_word  + length_buf;
-            
-            if (start == length_arr) {
-                process_split(buf, data);
-                break;
+            if (flag == 0) {
+                return 1;
             }
+        }
+    }
+    return 0;
 }
+void split(char word[], const char *dictionary[], int nwords, char buf[], int start,int end,int num_space,void *data, void (*process_split)(char buf[], void *data)) {
+    if (strlen(buf)==strlen(word)+num_space){
+        buf[strlen(buf)-1]='\0';
+        process_split(buf,data);
+    }
+    for (int i=start;i<end+1;i++){
+        if (isWord(word,start,i,dictionary,nwords)){
+            int i1=strlen(buf);
+            for (int j=start;j<i+1;j++){
+                buf[j-start+i1]=word[j];
+            }
+            buf[i+1-start+i1]=' ';
+            buf[i+1-start+i1+1]='\0';
+            split(word,dictionary,nwords,buf,i+1,end,num_space+1,data,process_split);
+            for (int j=start;j<i+2;j++){
+                buf[j-start+i1]='\0';
+            }
+        }
+    }
 }
+
+void printstr(char buf[], void *data) {
+    printf("%s\n", buf);
 }
 
 /*
